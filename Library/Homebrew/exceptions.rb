@@ -59,12 +59,12 @@ class UnsatisfiedExternalDependencyError < Homebrew::InstallationError
 
   def initialize formula, type
     @type = type
-    @formula = formula
+    super formula, get_message(formula)
   end
 
-  def message
+  def get_message formula
     <<-EOS.undent
-      Unsatisfied dependency: #{formula}
+      Unsatisfied external dependency: #{formula}
       Homebrew does not provide #{type.to_s.capitalize} dependencies, #{tool} does:
 
           #{command_line} #{formula}
@@ -84,7 +84,7 @@ class UnsatisfiedExternalDependencyError < Homebrew::InstallationError
   def command_line
     case type
       when :python
-        "easy_install install"
+        "easy_install"
       when :ruby
         "gem install"
       when :perl
@@ -110,5 +110,19 @@ class BuildError < Homebrew::InstallationError
 
   def was_running_configure?
     @command == './configure'
+  end
+end
+
+class DownloadError < RuntimeError
+  attr :command
+  attr :args
+  attr :exit_status
+
+  def initialize cmd, args, status
+    @command = cmd
+    @args = args
+    args.map!{ |arg| arg.to_s.gsub " ", "\\ " }
+    super "#{cmd} #{args.join ' '}\nDownloader failed with exit status #{status}"
+    @exit_status = status
   end
 end

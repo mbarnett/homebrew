@@ -185,7 +185,7 @@ def audit_formula_urls f
     next if p =~ %r[svn\.sourceforge]
 
     # Is it a sourceforge http(s) URL?
-    next unless p =~ %r[^http?://.*\bsourceforge\.]
+    next unless p =~ %r[^https?://.*\bsourceforge\.]
 
     if p =~ /\?use_mirror=/
       problems << " * Update this url (don't use ?use_mirror)."
@@ -217,6 +217,13 @@ def audit_formula_urls f
   urls.each do |p|
     if p =~ %r[^git://github\.com/]
       problems << " * Use https:// URLs for accessing repositories on GitHub."
+    end
+  end
+
+  # Check GNU urls
+  urls.each do |p|
+    if p =~ %r[^(https?|ftp)://(.+)/gnu/]
+      problems << " * \"ftpmirror.gnu.org\" is preferred for GNU software."
     end
   end
 
@@ -295,7 +302,7 @@ module Homebrew extend self
 
       problems += audit_formula_text(f.name, text_without_patch)
       problems += audit_formula_options(f, text_without_patch)
-      problems += audit_formula_version(f, text_without_patch)
+      problems += audit_formula_version(f, text_without_patch) if strict?
 
       unless problems.empty?
         errors = true
